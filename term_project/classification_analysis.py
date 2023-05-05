@@ -11,6 +11,7 @@ import seaborn as sns
 import pandas as pd
 import numpy as np
 from tensorflow.keras import Sequential
+import tensorflow as tf
 from tensorflow.keras.layers import Dense
 from sklearn.preprocessing import LabelEncoder
 from sklearn.cluster import KMeans, DBSCAN
@@ -36,7 +37,7 @@ def analysis_plot(y_pred,y_test,model):
 
 
 def decision_tree(x_train,x_test,y_train,y_test):
-    dt=DecisionTreeClassifier()
+    dt=DecisionTreeClassifier(random_state=42)
     dt.fit(x_train,y_train)
     y_pred=dt.predict(x_test)
     y_prob=dt.predict_proba(x_test)
@@ -48,7 +49,7 @@ def decision_tree(x_train,x_test,y_train,y_test):
 
 
 def logistic_regression(x_train,x_test,y_train,y_test):
-    lr = LogisticRegression(multi_class="multinomial",max_iter=1000)
+    lr = LogisticRegression(multi_class="multinomial",max_iter=1000,random_state=42)
     lr.fit(x_train.values,y_train.values)
     y_pred = lr.predict(x_test.values)
     y_prob = lr.predict_proba(x_test.values)
@@ -71,7 +72,7 @@ def knn(x_train,x_test,y_train,y_test):
     visualizer.show()
 
 def svm(x_train,x_test,y_train,y_test):
-    svm = SVC(kernel='rbf',probability=True)
+    svm = SVC(kernel='rbf',probability=True,random_state=42)
     svm.fit(x_train, y_train)
     y_pred = svm.predict(x_test)
     y_prob = svm.predict_proba(x_test)
@@ -93,10 +94,9 @@ def naive_bayes(x_train,x_test,y_train,y_test):
     visualizer.show()
 
 def random_forest(x_train,x_test,y_train,y_test):
-    rf=RandomForestClassifier()
+    rf=RandomForestClassifier(random_state=42)
     rf.fit(x_train,y_train)
     y_pred=rf.predict(x_test)
-    y_prob=rf.predict_proba(x_test)
     analysis_plot(y_pred, y_test, "Random Forest ")
     visualizer = ROCAUC(rf)
     visualizer.fit(x_train, y_train)  # Fit the training data to the visualizer
@@ -109,10 +109,11 @@ def neural_net(df,target):
     y = pd.get_dummies(y, prefix='price')  # convert categorical variable to one-hot encoding
     X = np.array(X)
     y = np.array(y)
+    tf.random.set_seed(42)
     x_train,x_test,y_train,y_test=train_test_split(X,y,test_size=0.2,shuffle=True,random_state=42)
     model = Sequential()
-    model.add(Dense(10, input_dim=5, activation='relu'))
-    model.add(Dense(5, activation='relu'))
+    model.add(Dense(20, input_dim=X.shape[1], activation='relu'))
+    model.add(Dense(10, activation='relu'))
     model.add(Dense(3, activation='softmax'))
 
     # Compile the model
@@ -135,16 +136,12 @@ def kmeans(x_train,x_test,y_train,y_test):
 
 
 
-
-
 def dbscan(x_train,x_test,y_train,y_test):
     dbscan = DBSCAN(eps=0.5, min_samples=5).fit(x_train)
-    y_pred = dbscan.fit_predict(x_test)
+    y_pred = dbscan.predict(x_test)
+    le = LabelEncoder()
+    y_test = le.fit_transform(y_test)
     analysis_plot(y_pred, y_test, "DBSCAN ")
-    visualizer = ROCAUC(dbscan)
-    visualizer.fit(x_train, y_train)  # Fit the training data to the visualizer
-    visualizer.score(x_test, y_test)  # Evaluate the model on the test data
-    visualizer.show()
 
 def apriori(x_train,x_test,y_train,y_test):
     frequent_itemsets = apriori(x_train, min_support=0.1, use_colnames=True)
@@ -156,23 +153,23 @@ def apriori(x_train,x_test,y_train,y_test):
 def train_model(df,target):
     print(f'{df.head()}\n\n{target.head()}\n\n{df.shape,target.shape}')
     x_train, x_test, y_train, y_test = train_test_split(df,target, test_size=0.2, random_state=42)
-    # print("**************************DT*********************************")
-    # decision_tree(x_train, x_test, y_train, y_test)
-    # print("**************************LR*********************************")
-    # logistic_regression(x_train, x_test, y_train, y_test)
-    # print("**************************KNN*********************************")
-    # knn(x_train, x_test, y_train, y_test)
-    # print("**************************SVM********************************")
-    # svm(x_train, x_test, y_train, y_test)
-    # print("*************************Naive_Bayes*********************************")
-    # naive_bayes(x_train, x_test, y_train, y_test)
-    # print("***************************RF********************************")
-    # random_forest(x_train, x_test, y_train, y_test)
-    # print("***************************NN********************************")
-    # neural_net(df,target)
+    print("**************************DT*********************************")
+    decision_tree(x_train, x_test, y_train, y_test)
+    print("**************************LR*********************************")
+    logistic_regression(x_train, x_test, y_train, y_test)
+    print("**************************KNN*********************************")
+    knn(x_train, x_test, y_train, y_test)
+    print("**************************SVM********************************")
+    #svm(x_train, x_test, y_train, y_test)
+    print("*************************Naive_Bayes*********************************")
+    naive_bayes(x_train, x_test, y_train, y_test)
+    print("***************************RF********************************")
+    random_forest(x_train, x_test, y_train, y_test)
+    print("***************************NeuralNet********************************")
+    #neural_net(df,target)
     print("****************************K-Means********************************")
     kmeans(x_train, x_test, y_train, y_test)
     print("****************************DBSCAN********************************")
-    #dbscan(x_train, x_test, y_train, y_test)
+    dbscan(x_train, x_test, y_train, y_test)
     print("****************************Apriori********************************")
     #apriori(x_train, x_test, y_train, y_test)

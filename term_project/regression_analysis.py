@@ -23,9 +23,20 @@ def ols(df,target):
     results = sm.OLS(target,df).fit()
     print(f' Original OLS: \n {results.summary()}')
 
-
+def conf_interval(df):
+    print('\n **********************************')
+    conf_level = 0.95
+    for i in df.columns:
+        variable_of_interest = df[i]
+        mean = variable_of_interest.mean()
+        std = variable_of_interest.std()
+        n = len(variable_of_interest)
+        std_error = std / np.sqrt(n)
+        t_value = stats.t.ppf((1 + conf_level) / 2, n - 1)
+        lower_ci = mean - t_value * std_error
+        upper_ci = mean + t_value * std_error
+        print(f'Confidence Interval:{i}', (lower_ci, upper_ci))
 def calc_vif(df):
-
     vif = pd.DataFrame()
     vif["variables"] = df.columns
     vif["VIF"] = [variance_inflation_factor(df.values, i) for i in range(df.shape[1])]
@@ -37,3 +48,4 @@ def regression_models(df,target):
     ols(df,target)
     ftest(df,target)
     calc_vif(df)
+    conf_interval(df)
